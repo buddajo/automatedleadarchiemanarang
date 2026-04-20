@@ -58,10 +58,6 @@
                         <span class="block text-slate-400 mb-1">LinkedIn Profile:</span>
                         <a id="res-linkedin" href="#" target="_blank" class="text-blue-400 break-all text-xs hover:underline">--</a>
                     </div>
-                    <div>
-                        <span class="block text-slate-400 mb-1">Verified Email:</span>
-                        <span id="res-email" class="text-green-300 font-mono text-xs">--</span>
-                    </div>
                 </div>
             </div>
 
@@ -118,7 +114,6 @@
                 document.getElementById('res-founder').innerText = data.founder || "N/A";
                 document.getElementById('res-title').innerText = data.job_title || "N/A";
                 document.getElementById('res-linkedin').innerText = data.linkedin && data.linkedin !== "#" ? "View Profile" : "--";
-                document.getElementById('res-email').innerText = data.email || "Seeking...";
                 const linkedinBox = document.getElementById('res-linkedin');
                     linkedinBox.href = data.email;
                     linkedinBox.innerText = "View LinkedIn Profile";
