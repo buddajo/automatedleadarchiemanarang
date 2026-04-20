@@ -3,66 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LeadGen Engine</title>
+    <title>Shopify Lead Gen Auditor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Fallback background if Tailwind fails to load immediately */
-        body { background-color: #0f172a; color: white; }
+        .column-height { min-height: 400px; }
     </style>
 </head>
-<body class="bg-[#0f172a] text-slate-200 min-h-screen p-8">
+<body class="bg-gray-900 text-white p-8">
 
-    <div class="max-w-6xl mx-auto">
-        <header class="flex justify-between items-center mb-12 border-b border-slate-800 pb-6">
-            <div>
-                <h1 class="text-3xl font-bold text-white">LeadGen <span class="text-blue-500">Engine</span></h1>
-                <p class="text-slate-400">Shopify Migration Auditor</p>
-            </div>
-            <button onclick="localStorage.removeItem('currentAudit'); location.reload();" class="px-4 py-2 bg-slate-800 rounded-lg hover:bg-slate-700 transition">Clear Data</button>
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-10 border-b border-gray-700 pb-5">
+            <h1 class="text-3xl font-bold text-blue-400">Shopify Brand Auditor</h1>
+            <p class="text-gray-400">Automated Lead Intelligence for E-commerce Developers</p>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div class="lg:col-span-4 bg-slate-900/50 border border-slate-800 p-6 rounded-2xl">
-                <label class="block text-sm font-medium mb-2">Amazon Product URL</label>
-                <input id="amazonUrl" type="text" placeholder="Paste link here..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 mb-4 text-white">
-                <button onclick="runAudit()" id="auditBtn" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold transition">Run Audit</button>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-700 column-height">
+                <h2 class="text-xl font-semibold mb-4 border-b border-gray-600 pb-2">1. Scanner</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Amazon Product URL</label>
+                        <input id="amazonUrl" type="text" placeholder="https://amazon.com/dp/..." 
+                            class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Brand Category (Manual Overide)</label>
+                        <input id="brandCategory" type="text" placeholder="e.g. Kitchenware, Pet Supplies" 
+                            class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-sm focus:outline-none focus:border-blue-500">
+                        <p class="text-xs text-gray-500 mt-1 italic">Helps Google ignore movies/generic names.</p>
+                    </div>
+
+                    <button onclick="runAudit()" id="runBtn" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition duration-200 shadow-lg">
+                        RUN BRAND AUDIT
+                    </button>
+                </div>
+
+                <div id="status" class="mt-4 text-sm text-blue-300 hidden italic animate-pulse">
+                    Connecting to Make.com workflow...
+                </div>
             </div>
 
-            <div class="lg:col-span-8 space-y-6">
-                <div id="statusUpdate" class="p-4 bg-blue-900/20 border border-blue-800 rounded-xl text-blue-300 text-sm">
-                    Enter a URL on the left to begin the brand audit.
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-700 column-height">
+                <h2 class="text-xl font-semibold mb-4 border-b border-gray-600 pb-2">2. Brand Data</h2>
+                <div id="brandResults" class="space-y-3">
+                    <div class="flex justify-between"><span class="text-gray-400">Brand Name:</span> <span id="resBrand" class="font-mono text-blue-200">--</span></div>
+                    <div class="flex justify-between"><span class="text-gray-400">Shopify Status:</span> <span id="resShopify" class="font-bold">--</span></div>
+                    <div class="flex justify-between"><span class="text-gray-400">Founder:</span> <span id="resFounder">--</span></div>
+                    <div class="flex justify-between"><span class="text-gray-400">Job Title:</span> <span id="resTitle" class="text-xs">--</span></div>
+                    <div class="mt-4">
+                        <span class="text-gray-400 text-sm block mb-1">LinkedIn Profile:</span>
+                        <a id="resLinkedIn" href="#" target="_blank" class="text-blue-400 hover:underline text-sm break-all">--</a>
+                    </div>
+                    <div class="mt-2">
+                        <span class="text-gray-400 text-sm block mb-1">Verified Email:</span>
+                        <span id="resEmail" class="text-green-400 font-mono text-sm">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-700 column-height flex flex-col">
+                <h2 class="text-xl font-semibold mb-4 border-b border-gray-600 pb-2">3. Action</h2>
+                <div class="flex-grow">
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Personalized Email Hook</label>
+                    <textarea id="resEmailDraft" rows="6" readonly
+                        class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-gray-300 resize-none h-40"></textarea>
                 </div>
                 
-                <div id="resultsArea" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
-                    </div>
+                <div class="mt-4 space-y-2">
+                    <button id="copyEmail" class="w-full bg-gray-700 hover:bg-gray-600 text-white text-sm py-2 rounded">
+                        Copy Email Draft
+                    </button>
+                    <button id="copyPrompt" class="w-full border border-blue-500/50 hover:bg-blue-900/30 text-blue-400 text-sm py-2 rounded">
+                        Copy Design Prompt (Gemini)
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        const WEBHOOK_AUDIT = 'https://hook.us2.make.com/jgzqsqilr2bvm6vgyluhitr49xi6i5mg';
-
         async function runAudit() {
-            const btn = document.getElementById('auditBtn');
+            const btn = document.getElementById('runBtn');
+            const status = document.getElementById('status');
             const url = document.getElementById('amazonUrl').value;
-            if(!url) return alert("Paste a link first!");
+            const category = document.getElementById('brandCategory').value;
 
-            btn.innerText = "Analyzing...";
-            document.getElementById('statusUpdate').innerText = "Sending to Make.com engine...";
-            
+            if(!url) return alert("Please paste an Amazon URL");
+
+            btn.disabled = true;
+            status.classList.remove('hidden');
+
+            // Replace YOUR_WEBHOOK_URL with the Webhook URL from your Make.com trigger
+            const webhookUrl = 'YOUR_WEBHOOK_URL_HERE';
+
             try {
-                const response = await fetch(WEBHOOK_AUDIT, {
+                const response = await fetch(webhookUrl, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ amazonUrl: url })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amazon_url: url, manual_category: category })
                 });
-                
+
                 const data = await response.json();
-                localStorage.setItem('currentAudit', JSON.stringify(data));
-                updateUI(data);
-            } catch (err) {
-                document.getElementById('statusUpdate').innerText = "Error: Make.com scenario is not active or Webhook URL is wrong.";
-                btn.innerText = "Run Audit";
+                
+                // Update UI with the logic from Gemini and Shopify Check
+                document.getElementById('resBrand').innerText = data.brand || 'Not found';
+                document.getElementById('resShopify').innerText = data.shopify_status || 'Checking...';
+                document.getElementById('resFounder').innerText = data.founder || 'Searching...';
+                document.getElementById('resEmail').innerText = data.email || 'Seeking...';
+                document.getElementById('resLinkedIn').href = data.linkedin || '#';
+                document.getElementById('resLinkedIn').innerText = data.linkedin || 'No Link';
+                document.getElementById('resEmailDraft').value = data.email_draft || '';
+
+            } catch (error) {
+                console.error('Audit Error:', error);
+                alert("Something went wrong with the workflow.");
+            } finally {
+                btn.disabled = false;
+                status.classList.add('hidden');
             }
         }
     </script>
