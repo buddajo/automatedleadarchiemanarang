@@ -40,18 +40,30 @@
     </div>
 
     <script>
+        const WEBHOOK_AUDIT = 'https://hook.us2.make.com/jgzqsqilr2bvm6vgyluhitr49xi6i5mg';
+
         async function runAudit() {
             const btn = document.getElementById('auditBtn');
             const url = document.getElementById('amazonUrl').value;
             if(!url) return alert("Paste a link first!");
 
             btn.innerText = "Analyzing...";
-            console.log("Starting audit for:", url);
+            document.getElementById('statusUpdate').innerText = "Sending to Make.com engine...";
             
-            // For now, this just proves the page is working
-            document.getElementById('statusUpdate').innerText = "Connecting to Make.com... (Once you add the Webhook URL, this will show real data)";
-            
-            // We will add the actual fetch logic back once you have the Make Webhook
+            try {
+                const response = await fetch(WEBHOOK_AUDIT, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ amazonUrl: url })
+                });
+                
+                const data = await response.json();
+                localStorage.setItem('currentAudit', JSON.stringify(data));
+                updateUI(data);
+            } catch (err) {
+                document.getElementById('statusUpdate').innerText = "Error: Make.com scenario is not active or Webhook URL is wrong.";
+                btn.innerText = "Run Audit";
+            }
         }
     </script>
 </body>
