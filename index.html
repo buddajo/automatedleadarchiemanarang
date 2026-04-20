@@ -120,19 +120,10 @@
                 document.getElementById('res-linkedin').innerText = data.linkedin && data.linkedin !== "#" ? "View Profile" : "--";
                 document.getElementById('res-email').innerText = data.email || "Seeking...";
                 const linkedinBox = document.getElementById('res-linkedin');
-                
-                if (data.linkedin && data.linkedin.startsWith("http")) {
-                    linkedinBox.href = data.linkedin;
+                    linkedinBox.href = data.email;
                     linkedinBox.innerText = "View LinkedIn Profile";
                     linkedinBox.classList.remove('text-slate-500');
                     linkedinBox.classList.add('text-blue-400', 'hover:underline');
-                } else {
-                    linkedinBox.href = "#";
-                    linkedinBox.innerText = "Profile Not Found";
-                    linkedinBox.classList.remove('text-blue-400');
-                    linkedinBox.classList.add('text-slate-500');
-                    linkedinBox.style.pointerEvents = "none"; // Makes it unclickable
-                }
                 // Separated Fields
                 document.getElementById('res-subjects').innerText = data.subjects || "No subjects generated.";
                 document.getElementById('res-hook').value = data.email_body || "No email body generated.";
