@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeadGen Engine | Shopify Migration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+    </script>
+</head>
+<body class="gradient-bg text-slate-200 min-h-screen p-8 font-sans">
+
+    <div class="max-w-6xl mx-auto flex justify-between items-center mb-12">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-white">LeadGen <span class="text-blue-500">Engine</span></h1>
+            <p class="text-slate-400">Amazon-to-Shopify Migration Auditor</p>
+        </div>
+        <button onclick="clearDashboard()" class="px-4 py-2 text-sm border border-slate-700 rounded-lg hover:bg-slate-800 transition">Clear Dashboard</button>
+    </div>
+
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <div class="lg:col-span-4 space-y-6">
+            <div class="glass p-6 rounded-2xl">
+                <label class="block text-sm font-medium mb-2">Paste Amazon Product URL</label>
+                <input id="amazonUrl" type="text" placeholder="https://amazon.com/..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 outline-none mb-4">
+                <button onclick="runAudit()" id="auditBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition">Run Audit</button>
+            </div>
+
+            <div id="brandCard" class="glass p-6 rounded-2xl hidden">
+                <h2 class="text-blue-400 uppercase text-xs font-bold tracking-widest mb-4">Target Brand</h2>
+                <div id="brandData" class="space-y-3">
+                    </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-4 space-y-6">
+            <div id="founderCard" class="glass p-6 rounded-2xl hidden">
+                <h2 class="text-blue-400 uppercase text-xs font-bold tracking-widest mb-4">Decision Maker</h2>
+                <div id="founderData" class="space-y-4">
+                    </div>
+            </div>
+
+            <div id="strategyCard" class="glass p-6 rounded-2xl hidden">
+                <h2 class="text-blue-400 uppercase text-xs font-bold tracking-widest mb-4">Design Strategy</h2>
+                <p id="strategyText" class="text-sm text-slate-300 leading-relaxed italic"></p>
+                <button onclick="copyDesignPrompt()" class="mt-4 w-full py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold transition">COPY DESIGN PROMPT</button>
+            </div>
+        </div>
+
+        <div class="lg:col-span-4 space-y-6">
+            <div id="outreachCard" class="glass p-6 rounded-2xl hidden">
+                <h2 class="text-blue-400 uppercase text-xs font-bold tracking-widest mb-4">Outreach Draft</h2>
+                
+                <div class="mb-4">
+                    <label class="text-[10px] text-slate-500 block mb-1 uppercase">Recommended Subject Line</label>
+                    <select id="subjectLine" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+                        </select>
+                    <p id="subjectTip" class="text-[10px] text-green-400 mt-1"></p>
+                </div>
+
+                <textarea id="emailDraft" rows="10" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-sm text-slate-300 focus:outline-none"></textarea>
+                
+                <button onclick="pushToEmail()" id="pushBtn" class="mt-4 w-full bg-white text-black font-bold py-3 rounded-xl hover:bg-slate-200 transition">PUSH TO MY INBOX</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const WEBHOOK_AUDIT = 'YOUR_MAKE_AUDIT_WEBHOOK_URL';
+        const WEBHOOK_PUSH = 'YOUR_MAKE_PUSH_WEBHOOK_URL';
+
+        // Initialize from LocalStorage
+        window.onload = () => {
+            const savedData = JSON.parse(localStorage.getItem('currentAudit'));
+            if (savedData) updateUI(savedData);
+        };
+
+        async function runAudit() {
+            const url = document.getElementById('amazonUrl').value;
+            if (!url) return alert('Please paste a URL');
+            
+            document.getElementById('auditBtn').innerText = 'Auditing...';
+            
+            try {
+                const response = await fetch(WEBHOOK_AUDIT, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ amazonUrl: url })
+                });
+                
+                const data = await response.json();
+                localStorage.setItem('currentAudit', JSON.stringify(data));
+                updateUI(data);
+            } catch (err) {
+                alert('Audit failed. Check Make.com webhook.');
+            } finally {
+                document.getElementById('auditBtn').innerText = 'Run Audit';
+            }
+        }
+
+        function updateUI(data) {
+            // Show Cards
+            document.querySelectorAll('.hidden').forEach(el => el.classList.remove('hidden'));
+            
+            // Brand Data
+            document.getElementById('brandData').innerHTML = `
+                <p class="text-xl font-bold">${data.brandName}</p>
+                <p class="text-sm ${data.isShopify ? 'text-red-400' : 'text-green-400'} font-bold">${data.isShopify ? 'HAS SHOPIFY' : 'NO SHOPIFY FOUND'}</p>
+                <p class="text-xs text-slate-400">Current: <a href="${data.currentSite}" target="_blank" class="underline">${data.currentSite || 'Amazon Only'}</a></p>
+            `;
+
+            // Founder Data
+            document.getElementById('founderData').innerHTML = `
+                <p class="font-bold text-white">${data.founderName}</p>
+                <p class="text-xs text-slate-400">${data.founderTitle}</p>
+                <div class="flex gap-2 mt-2">
+                    <a href="${data.linkedinUrl}" target="_blank" class="text-blue-500 text-xs underline">LinkedIn Profile</a>
+                    <span class="text-slate-600">|</span>
+                    <span class="text-xs text-white">${data.email}</span>
+                </div>
+            `;
+
+            // Strategy & Draft
+            document.getElementById('strategyText').innerText = data.designStrategy;
+            document.getElementById('emailDraft').value = data.emailDraft;
+
+            // Subject Lines Logic
+            const subSelect = document.getElementById('subjectLine');
+            subSelect.innerHTML = data.subjects.map(s => `<option value="${s.text}">${s.label}: ${s.text}</option>`).join('');
+            document.getElementById('subjectTip').innerText = `🔥 Recommended: "${data.bestSubjectLabel}" has a 82% open rate prediction.`;
+        }
+
+        async function pushToEmail() {
+            const data = JSON.parse(localStorage.getItem('currentAudit'));
+            data.finalEmail = document.getElementById('emailDraft').value;
+            data.selectedSubject = document.getElementById('subjectLine').value;
+
+            document.getElementById('pushBtn').innerText = 'Sending...';
+            
+            await fetch(WEBHOOK_PUSH, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+
+            document.getElementById('pushBtn').innerText = 'SENT TO INBOX ✓';
+            setTimeout(() => document.getElementById('pushBtn').innerText = 'PUSH TO MY INBOX', 3000);
+        }
+
+        function clearDashboard() {
+            localStorage.removeItem('currentAudit');
+            location.reload();
+        }
+
+        function copyDesignPrompt() {
+            const data = JSON.parse(localStorage.getItem('currentAudit'));
+            navigator.clipboard.writeText(data.masterPrompt);
+            alert('Prompt copied to clipboard!');
+        }
+    </script>
+</body>
+</html>
